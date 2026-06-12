@@ -41,16 +41,16 @@ La disponibilidad del hardware se pondera con el valor máximo dado que el proye
 
 La siguiente tabla (Tabla 1.2.1) muestra los valores ponderados asignados a cada proyecto considerado:
 
-|**Criterio**|**Incubadora de huevos domésticos**|**Incubadora neonatal**|**Invernadero**||||
-| :-: | :-: | :-: | :-: | :- | :- | :- |
-||**Puntaje**|**Pond.**|**Puntaje**|**Pond.**|**Puntaje**|**Pond.**|
-|Disponibilidad del hardware (peso: 10)|9|90|7|70|9|90|
-|Facilidad de uso (peso: 7)|8|56|6|42|8|56|
-|Responsabilidad (peso: 9)|7|63|4|36|8|72|
-|Tiempo de implementación (peso: 8)|8|64|6|48|8|64|
-|Costo (peso: 6)|8|48|5|30|7|42|
-|Interés personal (peso: 7)|9|63|6|42|5|35|
-|**TOTAL**||**384**||**268**||**359**|
+| Criterio | Incubadora de huevos domésticos | | Incubadora neonatal | | Invernadero | |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| | **Puntaje** | **Pond.** | **Puntaje** | **Pond.** | **Puntaje** | **Pond.** |
+| Disponibilidad del hardware (peso: 10) | 9 | 90 | 7 | 70 | 9 | 90 |
+| Facilidad de uso (peso: 7) | 8 | 56 | 6 | 42 | 8 | 56 |
+| Responsabilidad (peso: 9) | 7 | 63 | 4 | 36 | 8 | 72 |
+| Tiempo de implementación (peso: 8) | 8 | 64 | 6 | 48 | 8 | 64 |
+| Costo (peso: 6) | 8 | 48 | 5 | 30 | 7 | 42 |
+| Interés personal (peso: 7) | 9 | 63 | 6 | 42 | 5 | 35 |
+| **TOTAL** | | **384** | | **268** | | **359** |
 
 *Tabla 1.2.1: Comparación ponderada de proyectos alternativos*
 
@@ -68,10 +68,9 @@ Los desafíos principales de este proyecto son la integración de los distintos 
 En la Figura 1.3.1 se muestra el diagrama en bloques del sistema con los principales módulos del proyecto.
 
 <p align="center">
-  <img src="https://github.com/pmartinez-madero/Facultad_2026/blob/main/Incubadora.jpeg" alt="image1">
+  <img src="https://github.com/user-attachments/assets/ac7a9076-2dc2-4aa0-80a8-0ea0f44c618c" width="60%">
 </p>
 <p align="center"><em>Figura 1.3.1: Diagrama en bloques del sistema</em></p>
-
 
 # **2. Elicitación de requisitos y casos de uso**
 En el mercado argentino e internacional existen a la venta varios productos similares que proporcionan solución a la incubación automática de huevos. Sin embargo, la mayoría de los productos comerciales disponibles localmente no combinan en un único dispositivo el control preciso de temperatura y humedad, la rotación automatizada con calendario configurable, el soporte para múltiples especies y el registro histórico de variables.
