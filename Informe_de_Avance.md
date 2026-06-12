@@ -1,8 +1,10 @@
-Incubadora: informe de avance
+## **Incubadora: informe de avance**
 
 Autores: Agustin Ezequiel Achinelli -- Pablo Martinez Madero
 
 Fecha: 12/06/2026 -- 1er Cuatrimestre
+
+
 
 Se detallará a continuación el estado de cada uno de los requerimientos del sistema siguiendo las referencias:
 
