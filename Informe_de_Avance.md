@@ -16,17 +16,17 @@ RD: Requerimiento descartado
 
 | ESTADO | GRUPO | ID | TAREA |
 |:--:|----|----|----|
-| S/I | Teperatura | 1.1 | El sistema medirá continuamente la temperatura interior mediante un sensor dedicado. |
+| I | Teperatura | 1.1 | El sistema medirá continuamente la temperatura interior mediante un sensor dedicado. |
 | S/I |   | 1.2 | El sistema activará el elemento calefactor cuando la temperatura esté por debajo del umbral configurado. |
 | S/I |   | 1.3 | El sistema desactivará el elemento calefactor cuando la temperatura supere el umbral configurado. |
-| S/I | Humedad | 2.1 | El sistema medirá continuamente la humedad relativa interior. |
+| I | Humedad | 2.1 | El sistema medirá continuamente la humedad relativa interior. |
 | S/I |   | 2.2 | El sistema activará el humidificador cuando la humedad esté por debajo del umbral configurado. |
 | S/I |   | 2.3 | El sistema desactivará el humidificador cuando la humedad supere el umbral configurado. |
 | S/I | Rotación | 3.1 | El sistema rotará los huevos automáticamente a intervalos de tiempo configurables por tipo de huevo. |
 | S/I |   | 3.2 | El sistema indicará mediante un LED cada vez que se realice una rotación. |
 | S/I |   | 3.3 | El sistema inhibirá la rotación durante los últimos días del ciclo de incubación (lockdown), según el modo seleccionado. |
 | S/I | Interfaz | 4.1 | El sistema contará con una pantalla LCD para mostrar temperatura, humedad, día del ciclo y modo activo. |
-| S/I |   | 4.2 | El sistema contará con un teclado matricial para navegar entre menús y configurar parámetros. |
+| I |   | 4.2 | El sistema contará con un teclado matricial para navegar entre menús y configurar parámetros. |
 | S/I |   | 4.3 | El sistema contará con LEDs indicadores de estado: calentador activo, humidificador activo y rotación. |
 | S/I |   | 4.4 | El sistema contará con un buzzer para alertas sonoras (alarmas y confirmaciones). |
 | S/I | Modos de incubación | 5.1 | El sistema soportará al menos tres modos predefinidos: huevo de gallina, pato y codorniz, con sus respectivos parámetros de temperatura, humedad y ciclo. |
