@@ -63,14 +63,20 @@ typedef enum task_system_st{
 	ST_SYS_MAIN_NEW,        /* cursor en NUEVO INICIO  */
 	ST_SYS_MAIN_CONT,       /* cursor en CONTINUAR     */
 
+	/* Submenú de NUEVO INICIO: AJUSTAR / PRESET 1 / PRESET 2 / PRESET 3,
+	 * navegado con un único estado + índice de cursor (0..3) */
+	ST_SYS_NEW_MENU,
+
 	/* Rama NUEVO INICIO -> configuración paso a paso */
 	ST_SYS_SET_TEMP,        /* EST. TEMPERATURA  T: XX  */
 	ST_SYS_SET_HUM,         /* EST. HUMEDAD      H: XX% */
 	ST_SYS_SET_DAYS,        /* EST. DIAS   D: XX        */
 	ST_SYS_SET_HOURS,       /* EST. HORAS  H: XX        */
 	ST_SYS_INCUBATING,      /* EN PROCESO / INCUBANDO   */
+	ST_SYS_FINISHED,        /* INCUBACION FINALIZADA    */
 
 	ST_SYS_READING,         /* LEYENDO / DATOS          */
+	ST_SYS_LAST_DATA_SHOW,
 	ST_SYS_NO_DATA,         /* NO SE ENCUENTRAN DATOS   */
 	ST_SYS_LAST_DATA,       /* ULTIMO T:XX / H:XX R:XX  */
 	ST_SYS_INCUBATING_CONT  /* EN PROCESO / INCUBANDO (desde continuar) */

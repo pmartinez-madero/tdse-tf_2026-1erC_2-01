@@ -81,8 +81,32 @@ typedef struct
 	task_sensor_ev_t	event;
 } task_sensor_dta_t;
 
+/* ---------------------------------------------------------------------------
+ * SHT30 (Temperatura / Humedad via I2C) - Maquina de estados no bloqueante
+ * ------------------------------------------------------------------------ */
+
+/* Estados de la FSM del SHT30 */
+typedef enum task_sht30_st {
+	ST_SHT30_IDLE,			/* Reposo: cuenta ticks hasta el proximo muestreo (2s) */
+	ST_SHT30_TRIGGER,		/* Envia comando de medicion por I2C                   */
+	ST_SHT30_WAIT,	        /* Espera ~15ms a que el sensor termine de medir       */
+	ST_SHT30_READ,			/* Lee los 6 bytes, calcula valores y publica          */
+	ST_SHT30_ERROR			/* Error de comunicacion I2C: vuelve a IDLE            */
+} task_sht30_st_t;
+
+typedef struct
+{
+	task_sht30_st_t		state;
+	uint32_t			tick;			/* Contador generico en ms */
+
+	float				Temperature;
+	float				Humidity;
+	bool				data_valid;		/* true cuando Temperature/Humidity son validos */
+} task_sht30_dta_t;
+
 /********************** external data declaration ****************************/
 extern task_sensor_dta_t task_sensor_dta_list[];
+extern task_sht30_dta_t  task_sht30_dta;
 
 /********************** external functions declaration ***********************/
 
@@ -92,5 +116,3 @@ extern task_sensor_dta_t task_sensor_dta_list[];
 #endif
 
 #endif /* TASK_SENSOR_ATTRIBUTE_H_ */
-
-/********************** end of file ******************************************/

@@ -61,8 +61,8 @@ all: main-build
 main-build: proof_menu.elf secondary-outputs
 
 # Tool invocations
-proof_menu.elf proof_menu.map: $(OBJS) $(USER_OBJS) C:\Users\ericsson\Desktop\Taller\ embebidos\Proyecto\ final\proof_menu\STM32F103RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "proof_menu.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\ericsson\Desktop\Taller embebidos\Proyecto final\proof_menu\STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="proof_menu.map" -Wl,--gc-sections -static -specs=rdimon.specs --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+proof_menu.elf proof_menu.map: $(OBJS) $(USER_OBJS) C:\Users\XAGUSD\Desktop\P_Final_Git\proof_menu\STM32F103RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "proof_menu.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\XAGUSD\Desktop\P_Final_Git\proof_menu\STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="proof_menu.map" -Wl,--gc-sections -static -specs=rdimon.specs --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

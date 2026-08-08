@@ -13,6 +13,7 @@ C_SRCS += \
 ../app/src/task_actuator_interface.c \
 ../app/src/task_display.c \
 ../app/src/task_display_interface.c \
+../app/src/task_memory.c \
 ../app/src/task_sensor.c \
 ../app/src/task_system.c \
 ../app/src/task_system_interface.c 
@@ -26,6 +27,7 @@ OBJS += \
 ./app/src/task_actuator_interface.o \
 ./app/src/task_display.o \
 ./app/src/task_display_interface.o \
+./app/src/task_memory.o \
 ./app/src/task_sensor.o \
 ./app/src/task_system.o \
 ./app/src/task_system_interface.o 
@@ -39,6 +41,7 @@ C_DEPS += \
 ./app/src/task_actuator_interface.d \
 ./app/src/task_display.d \
 ./app/src/task_display_interface.d \
+./app/src/task_memory.d \
 ./app/src/task_sensor.d \
 ./app/src/task_system.d \
 ./app/src/task_system_interface.d 
@@ -51,7 +54,7 @@ app/src/%.o app/src/%.su app/src/%.cyclo: ../app/src/%.c app/src/subdir.mk
 clean: clean-app-2f-src
 
 clean-app-2f-src:
-	-$(RM) ./app/src/app.cyclo ./app/src/app.d ./app/src/app.o ./app/src/app.su ./app/src/app_it.cyclo ./app/src/app_it.d ./app/src/app_it.o ./app/src/app_it.su ./app/src/logger.cyclo ./app/src/logger.d ./app/src/logger.o ./app/src/logger.su ./app/src/systick.cyclo ./app/src/systick.d ./app/src/systick.o ./app/src/systick.su ./app/src/task_actuator.cyclo ./app/src/task_actuator.d ./app/src/task_actuator.o ./app/src/task_actuator.su ./app/src/task_actuator_interface.cyclo ./app/src/task_actuator_interface.d ./app/src/task_actuator_interface.o ./app/src/task_actuator_interface.su ./app/src/task_display.cyclo ./app/src/task_display.d ./app/src/task_display.o ./app/src/task_display.su ./app/src/task_display_interface.cyclo ./app/src/task_display_interface.d ./app/src/task_display_interface.o ./app/src/task_display_interface.su ./app/src/task_sensor.cyclo ./app/src/task_sensor.d ./app/src/task_sensor.o ./app/src/task_sensor.su ./app/src/task_system.cyclo ./app/src/task_system.d ./app/src/task_system.o ./app/src/task_system.su ./app/src/task_system_interface.cyclo ./app/src/task_system_interface.d ./app/src/task_system_interface.o ./app/src/task_system_interface.su
+	-$(RM) ./app/src/app.cyclo ./app/src/app.d ./app/src/app.o ./app/src/app.su ./app/src/app_it.cyclo ./app/src/app_it.d ./app/src/app_it.o ./app/src/app_it.su ./app/src/logger.cyclo ./app/src/logger.d ./app/src/logger.o ./app/src/logger.su ./app/src/systick.cyclo ./app/src/systick.d ./app/src/systick.o ./app/src/systick.su ./app/src/task_actuator.cyclo ./app/src/task_actuator.d ./app/src/task_actuator.o ./app/src/task_actuator.su ./app/src/task_actuator_interface.cyclo ./app/src/task_actuator_interface.d ./app/src/task_actuator_interface.o ./app/src/task_actuator_interface.su ./app/src/task_display.cyclo ./app/src/task_display.d ./app/src/task_display.o ./app/src/task_display.su ./app/src/task_display_interface.cyclo ./app/src/task_display_interface.d ./app/src/task_display_interface.o ./app/src/task_display_interface.su ./app/src/task_memory.cyclo ./app/src/task_memory.d ./app/src/task_memory.o ./app/src/task_memory.su ./app/src/task_sensor.cyclo ./app/src/task_sensor.d ./app/src/task_sensor.o ./app/src/task_sensor.su ./app/src/task_system.cyclo ./app/src/task_system.d ./app/src/task_system.o ./app/src/task_system.su ./app/src/task_system_interface.cyclo ./app/src/task_system_interface.d ./app/src/task_system_interface.o ./app/src/task_system_interface.su
 
 .PHONY: clean-app-2f-src
 

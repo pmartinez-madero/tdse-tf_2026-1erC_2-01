@@ -1,0 +1,10 @@
+../app/src/task_memory.c:84:6:task_memory_init	40	static,ignoring_inline_asm
+../app/src/task_memory.c:118:6:task_memory_update	16	static
+../app/src/task_memory.c:125:6:task_memory_load_preset	16	static
+../app/src/task_memory.c:135:6:task_memory_save_running	24	static
+../app/src/task_memory.c:147:6:task_memory_load_running	16	static
+../app/src/task_memory.c:162:6:task_memory_clear_running	16	static
+../app/src/task_memory.c:177:13:eeprom_write	40	static,ignoring_inline_asm
+../app/src/task_memory.c:204:13:eeprom_read	40	static,ignoring_inline_asm
+../app/src/task_memory.c:222:13:memory_write_preset	16	static
+../app/src/task_memory.c:236:13:memory_provision_defaults	16	static,ignoring_inline_asm

@@ -51,15 +51,37 @@
 #define DEL_LED_MED		250ul
 #define DEL_LED_MAX		500ul
 
+/* Valores CCR para posiciones del servo (TIM2 CH1, Period=999, f=50Hz) */
+#define SERVO_CCR_POS_A     62ul    /* 45°  ~ 1.25ms */
+#define SERVO_CCR_CENTER    75ul    /* 90°  ~ 1.50ms */
+#define SERVO_CCR_POS_B     87ul    /* 135° ~ 1.75ms */
+
+/* Tiempo que tarda el servo en llegar a la posición: 500ms es suficiente */
+#define SERVO_MOVE_TICKS    500ul
+
 #define ACTUATOR_CFG_QTY	(sizeof(task_actuator_cfg_list)/sizeof(task_actuator_cfg_t))
 #define ACTUATOR_DTA_QTY	ACTUATOR_CFG_QTY
 
 /********************** internal data declaration ****************************/
+extern TIM_HandleTypeDef htim2;
+
 const task_actuator_cfg_t task_actuator_cfg_list[] = {
-	{ID_LED_A,  LED_A_PORT,  LED_A_PIN, LED_A_ON,  LED_A_OFF, DEL_LED_MAX}
+	{ID_LED_A,  LED_A_PORT,  LED_A_PIN, LED_A_ON,     LED_A_OFF,    DEL_LED_MAX, NULL,      0        },
+	{ID_SERVO,  NULL,        0,         0,            0,            0,           NULL,      0        },
+	{ID_HEATER, GPIOC,       RELE_Pin,  GPIO_PIN_SET, GPIO_PIN_RESET, 0,         GPIOC,     LED_T_Pin}
 };
 
 task_actuator_dta_t task_actuator_dta_list[ACTUATOR_DTA_QTY];
+
+/* Estado destino del servo mientras esta en ST_SERVO_MOVING, guardado en
+ * software en vez de leido del registro CCR del timer al finalizar el
+ * movimiento. Leer __HAL_TIM_GET_COMPARE() para decidir el estado destino
+ * es fragil: si mientras el servo se mueve llega un evento nuevo que
+ * cambia el CCR de nuevo (rotacion + fin de periodo casi simultaneos),
+ * la lectura del registro al final puede no coincidir con la intencion
+ * real, y ademas el evento nuevo se perdia silenciosamente porque
+ * ST_SERVO_MOVING no revisaba el flag de eventos entrantes. */
+static task_actuator_st_t servo_move_target = ST_SERVO_POS_A;
 
 /********************** internal functions declaration ***********************/
 void task_actuator_statechart(uint32_t index);
@@ -111,7 +133,26 @@ void task_actuator_init(void *parameters)
 					 GET_NAME(event), (uint32_t)event,
 					 GET_NAME(b_event), (b_event ? "true" : "false"));
 
-		HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port, p_task_actuator_cfg->pin, p_task_actuator_cfg->led_off);
+		if (ID_SERVO == p_task_actuator_cfg->identifier)
+		{
+			/* Posición inicial 90°: el init ocurre antes del ciclo,
+			 * por lo que el HAL_Delay aquí es aceptable. */
+			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, SERVO_CCR_CENTER);
+			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+			HAL_Delay(500);
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+			p_task_actuator_dta->state = ST_SERVO_POS_A;
+		}
+		else if (ID_HEATER == p_task_actuator_cfg->identifier)
+		{
+			HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port,  p_task_actuator_cfg->pin,  p_task_actuator_cfg->led_off);
+			HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port2, p_task_actuator_cfg->pin2, p_task_actuator_cfg->led_off);
+			p_task_actuator_dta->state = ST_HEATER_OFF;
+		}
+		else
+		{
+			HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port, p_task_actuator_cfg->pin, p_task_actuator_cfg->led_off);
+		}
 	}
 }
 
@@ -155,6 +196,125 @@ void task_actuator_statechart(uint32_t index)
 				p_task_actuator_dta->flag = false;
 				HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port, p_task_actuator_cfg->pin, p_task_actuator_cfg->led_off);
 				p_task_actuator_dta->state = ST_LED_IDLE;
+			}
+
+			break;
+
+		/* ================================================================
+		 * SERVO — posición A (45°), PWM apagado, esperando evento
+		 * ================================================================ */
+		case ST_SERVO_POS_A:
+
+			if (true == p_task_actuator_dta->flag)
+			{
+				p_task_actuator_dta->flag = false;
+
+				if (EV_SERVO_POS_B == p_task_actuator_dta->event)
+				{
+					__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, SERVO_CCR_POS_B);
+					HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+					p_task_actuator_dta->tick  = SERVO_MOVE_TICKS;
+					servo_move_target          = ST_SERVO_POS_B;
+					p_task_actuator_dta->state = ST_SERVO_MOVING;
+				}
+				else if (EV_SERVO_CENTER == p_task_actuator_dta->event)
+				{
+					__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, SERVO_CCR_CENTER);
+					HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+					p_task_actuator_dta->tick  = SERVO_MOVE_TICKS;
+					servo_move_target          = ST_SERVO_POS_A;
+					p_task_actuator_dta->state = ST_SERVO_MOVING;
+				}
+			}
+
+			break;
+
+		/* ================================================================
+		 * SERVO — posición B (135°), PWM apagado, esperando evento
+		 * ================================================================ */
+		case ST_SERVO_POS_B:
+
+			if (true == p_task_actuator_dta->flag)
+			{
+				p_task_actuator_dta->flag = false;
+
+				if (EV_SERVO_POS_A == p_task_actuator_dta->event)
+				{
+					__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, SERVO_CCR_POS_A);
+					HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+					p_task_actuator_dta->tick  = SERVO_MOVE_TICKS;
+					servo_move_target          = ST_SERVO_POS_A;
+					p_task_actuator_dta->state = ST_SERVO_MOVING;
+				}
+				else if (EV_SERVO_CENTER == p_task_actuator_dta->event)
+				{
+					__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, SERVO_CCR_CENTER);
+					HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+					p_task_actuator_dta->tick  = SERVO_MOVE_TICKS;
+					servo_move_target          = ST_SERVO_POS_A;
+					p_task_actuator_dta->state = ST_SERVO_MOVING;
+				}
+			}
+
+			break;
+
+		/* ================================================================
+		 * SERVO — en movimiento, espera SERVO_MOVE_TICKS y apaga PWM
+		 * ================================================================ */
+		case ST_SERVO_MOVING:
+
+			/* Si llega un evento nuevo mientras el servo todavia se esta
+			 * moviendo, lo descartamos de forma explicita (en vez de
+			 * dejarlo en el struct sin consumir, donde antes se perdia
+			 * silenciosamente sin ni siquiera bajar el flag). El servo
+			 * termina el movimiento en curso antes de aceptar otro. */
+			if (true == p_task_actuator_dta->flag)
+			{
+				p_task_actuator_dta->flag = false;
+			}
+
+			if (p_task_actuator_dta->tick > 0)
+			{
+				p_task_actuator_dta->tick--;
+			}
+			else
+			{
+				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+
+				/* Ir al estado destino guardado en software al iniciar
+				 * el movimiento, no al que indique el registro CCR del
+				 * timer en este instante. */
+				p_task_actuator_dta->state = servo_move_target;
+			}
+
+			break;
+
+		/* ================================================================
+		 * HEATER — apagado (RELE + LED_T indicador apagados)
+		 * ================================================================ */
+		case ST_HEATER_OFF:
+
+			if ((true == p_task_actuator_dta->flag) && (EV_HEATER_ON == p_task_actuator_dta->event))
+			{
+				p_task_actuator_dta->flag = false;
+				HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port,  p_task_actuator_cfg->pin,  p_task_actuator_cfg->led_on);
+				HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port2, p_task_actuator_cfg->pin2, p_task_actuator_cfg->led_on);
+				p_task_actuator_dta->state = ST_HEATER_ON;
+			}
+
+			break;
+
+		/* ================================================================
+		 * HEATER — encendido (RELE + LED_T indicador encendidos)
+		 * ================================================================ */
+		case ST_HEATER_ON:
+
+			if ((true == p_task_actuator_dta->flag) && (EV_HEATER_OFF == p_task_actuator_dta->event))
+			{
+				p_task_actuator_dta->flag = false;
+				HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port,  p_task_actuator_cfg->pin,  p_task_actuator_cfg->led_off);
+				HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port2, p_task_actuator_cfg->pin2, p_task_actuator_cfg->led_off);
+				p_task_actuator_dta->state = ST_HEATER_OFF;
 			}
 
 			break;

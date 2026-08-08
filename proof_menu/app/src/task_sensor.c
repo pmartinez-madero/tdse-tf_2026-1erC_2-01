@@ -35,6 +35,7 @@
 /********************** inclusions *******************************************/
 /* Project includes */
 #include "main.h"
+#include <string.h>
 
 /* Demo includes */
 #include "logger.h"
@@ -55,13 +56,22 @@
 #define SENSOR_CFG_QTY		(sizeof(task_sensor_cfg_list)/sizeof(task_sensor_cfg_t))
 #define SENSOR_DTA_QTY		SENSOR_CFG_QTY
 
+/* ---------------------------------------------------------------------------
+ * SHT30 (Temperatura / Humedad)
+ * ------------------------------------------------------------------------ */
+/* Asumiendo que usas el I2C1, de lo contrario cambialo por hi2c2, etc. */
+extern I2C_HandleTypeDef hi2c2;
+
+/* Direccion 0x44 desplazada 1 bit a la izquierda para las HAL de STM32 */
+#define SHT30_I2C_ADDR                  0x8A
+
+/* Periodo entre muestreos: 2000 ticks de 1ms = 2s */
+#define SHT30_SAMPLE_PERIOD_TICKS		2000ul
+
+/* Tiempo de medicion para High Repeatability (~15ms) */
+#define SHT30_MEASUREMENT_WAIT_TICKS    15ul
+
 /********************** internal data declaration ****************************/
-/*const task_sensor_cfg_t task_sensor_cfg_list[] = {
-	{ID_BTN_A,    BTN_A_PORT,    BTN_A_PIN,   BTN_A_PRESSED,   DEL_BTN_MAX, EV_SYS_IDLE, EV_SYS_BTN_A},
-	{ID_BTN_ENT,  BTN_ENT_PORT,  BTN_ENT_PIN, BTN_ENT_PRESSED, DEL_BTN_MAX, EV_SYS_IDLE, EV_SYS_ENTER},
-	{ID_BTN_NEX,  BTN_NEX_PORT,  BTN_NEX_PIN, BTN_NEX_PRESSED, DEL_BTN_MAX, EV_SYS_IDLE, EV_SYS_NEXT},
-	{ID_BTN_ESC,  BTN_ESC_PORT,  BTN_ESC_PIN, BTN_ESC_PRESSED, DEL_BTN_MAX, EV_SYS_IDLE, EV_SYS_ESCAPE}
-};*/
 
 const task_sensor_cfg_t task_sensor_cfg_list[] = {
 	{ID_BTN_UP,    BTN_UP_PORT,    BTN_UP_PIN,    BTN_UP_PRESSED,    DEL_BTN_MAX, EV_SYS_IDLE, EV_SYS_UP},
@@ -72,8 +82,14 @@ const task_sensor_cfg_t task_sensor_cfg_list[] = {
 
 task_sensor_dta_t task_sensor_dta_list[SENSOR_DTA_QTY];
 
+/* Instancia unica de datos del SHT30 */
+task_sht30_dta_t task_sht30_dta;
+
 /********************** internal functions declaration ***********************/
 void task_sensor_statechart(uint32_t index);
+
+/* Declaracion de la nueva FSM del SHT30 */
+static void task_sht30_statechart(void);
 
 /********************** internal data definition *****************************/
 const char *p_task_sensor 		= "Task Sensor (Sensor Statechart)";
@@ -110,11 +126,17 @@ void task_sensor_init(void *parameters)
 		p_task_sensor_dta->event = event;
 
 		LOGGER_INFO(" ");
-		LOGGER_INFO("   %s = %lu   %s = %lu   %s = %lu",
-				    GET_NAME(index), index,
-					GET_NAME(state), (uint32_t)state,
-					GET_NAME(event), (uint32_t)event);
+		LOGGER_INFO("   %s = %lu   %s = %lu   %s = %lu",GET_NAME(index), index,GET_NAME(state), (uint32_t)state,GET_NAME(event), (uint32_t)event);
 	}
+
+	/* --- Inicializacion del SHT30 --- */
+		memset(&task_sht30_dta, 0, sizeof(task_sht30_dta));
+		task_sht30_dta.state = ST_SHT30_IDLE;
+		task_sht30_dta.tick  = SHT30_SAMPLE_PERIOD_TICKS;
+
+		LOGGER_INFO(" ");
+		LOGGER_INFO("   SHT30 I2C inicializado - primer muestreo en %lu ms",(uint32_t)SHT30_SAMPLE_PERIOD_TICKS);
+
 }
 
 void task_sensor_update(void *parameters)
@@ -126,6 +148,9 @@ void task_sensor_update(void *parameters)
 		/* Run Task Statechart */
 		task_sensor_statechart(index);
 	}
+
+	/* Run SHT30 Statechart (una transicion como maximo por tick) */
+	task_sht30_statechart();
 }
 
 void task_sensor_statechart(uint32_t index)
@@ -214,6 +239,92 @@ void task_sensor_statechart(uint32_t index)
 
 			break;
 		}
+	}
+}
+
+/* ---------------------------------------------------------------------------
+ * SHT30 - Maquina de estados (no bloqueante para el planificador)
+ * ------------------------------------------------------------------------ */
+static void task_sht30_statechart(void)
+{
+	switch (task_sht30_dta.state)
+	{
+		case ST_SHT30_IDLE:
+			if (task_sht30_dta.tick > 0)
+			{
+				task_sht30_dta.tick--;
+			}
+			else
+			{
+				task_sht30_dta.state = ST_SHT30_TRIGGER;
+			}
+			break;
+
+		case ST_SHT30_TRIGGER:
+		{
+            /* Comando SHT30: Single Shot, High Repeatability, Clock Stretching Disabled */
+            uint8_t cmd[2] = {0x24, 0x00};
+
+            /* Enviamos el comando por I2C (timeout corto de 10ms porque es solo escritura) */
+            if (HAL_I2C_Master_Transmit(&hi2c2, SHT30_I2C_ADDR, cmd, 2, 100) == HAL_OK)
+            {
+                task_sht30_dta.tick  = SHT30_MEASUREMENT_WAIT_TICKS;
+                task_sht30_dta.state = ST_SHT30_WAIT;
+            }
+            else
+            {
+                LOGGER_INFO("SHT30: fallo TX comando (addr=0x%02X) ErrorCode=0x%lX",SHT30_I2C_ADDR, HAL_I2C_GetError(&hi2c2));
+                task_sht30_dta.state = ST_SHT30_ERROR;
+            }
+            break;
+		}
+
+		case ST_SHT30_WAIT:
+			if (task_sht30_dta.tick > 0)
+			{
+				task_sht30_dta.tick--;
+			}
+			else
+			{
+				task_sht30_dta.state = ST_SHT30_READ;
+			}
+			break;
+
+		case ST_SHT30_READ:
+		{
+            uint8_t rx_data[6];
+
+            /* Leemos los 6 bytes de respuesta: Temp MSB, Temp LSB, Temp CRC, Hum MSB, Hum LSB, Hum CRC */
+            if (HAL_I2C_Master_Receive(&hi2c2, SHT30_I2C_ADDR, rx_data, 6, 100) == HAL_OK)
+            {
+                uint16_t raw_temp = (uint16_t)((rx_data[0] << 8) | rx_data[1]);
+                uint16_t raw_hum  = (uint16_t)((rx_data[3] << 8) | rx_data[4]);
+
+                /* Formulas de conversion oficiales del Datasheet del SHT30 */
+                task_sht30_dta.Temperature = -45.0f + (175.0f * ((float)raw_temp / 65535.0f));
+                task_sht30_dta.Humidity    = 100.0f * ((float)raw_hum / 65535.0f);
+                task_sht30_dta.data_valid  = true;
+
+                task_sht30_dta.tick  = SHT30_SAMPLE_PERIOD_TICKS;
+                task_sht30_dta.state = ST_SHT30_IDLE;
+            }
+            else
+            {
+                task_sht30_dta.state = ST_SHT30_ERROR;
+            }
+			break;
+		}
+
+		case ST_SHT30_ERROR:
+			task_sht30_dta.data_valid = false;
+			task_sht30_dta.tick  = 50ul;
+			task_sht30_dta.state = ST_SHT30_IDLE;
+			break;
+
+		default:
+			task_sht30_dta.state = ST_SHT30_IDLE;
+			task_sht30_dta.tick  = SHT30_SAMPLE_PERIOD_TICKS;
+			break;
 	}
 }
 

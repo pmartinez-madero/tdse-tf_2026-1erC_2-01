@@ -1,0 +1,10 @@
+../app/src/task_memory.c:84:6:task_memory_init	3
+../app/src/task_memory.c:118:6:task_memory_update	1
+../app/src/task_memory.c:125:6:task_memory_load_preset	3
+../app/src/task_memory.c:135:6:task_memory_save_running	1
+../app/src/task_memory.c:147:6:task_memory_load_running	3
+../app/src/task_memory.c:162:6:task_memory_clear_running	1
+../app/src/task_memory.c:177:13:eeprom_write	2
+../app/src/task_memory.c:204:13:eeprom_read	2
+../app/src/task_memory.c:222:13:memory_write_preset	2
+../app/src/task_memory.c:236:13:memory_provision_defaults	5
