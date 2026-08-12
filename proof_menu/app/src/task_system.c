@@ -126,6 +126,15 @@ static bool servo_active = false;
 /* Estado actual conocido del calefactor (evita reenviar el mismo evento) */
 static bool heater_on = false;
 
+/* Histéresis del indicador de humedad baja: enciende LED_H por debajo de
+ * (cfg_hum - HUMID_HYSTERESIS) y apaga al alcanzar cfg_hum, mismo patrón
+ * que el calefactor con la temperatura. */
+#define HUMID_HYSTERESIS       1
+
+/* Estado actual conocido del indicador de humedad baja (evita reenviar
+ * el mismo evento en cada tick) */
+static bool humid_on = false;
+
 /* Cursor del submenú de NUEVO INICIO: 0=AJUSTAR, 1..3=PRESET 1..3 */
 #define NEW_MENU_OPT_ADJUST     0u
 #define NEW_MENU_OPT_QTY        (1u + MEMORY_PRESET_QTY)
@@ -320,6 +329,9 @@ static void incubation_start(void)
     /* Calefactor arranca apagado (coincide con estado inicial del actuador) */
     heater_on = false;
 
+    /* Indicador de humedad baja arranca apagado (idem calefactor) */
+    humid_on = false;
+
     /* Reiniciar cadencia de guardado a EEPROM para esta nueva incubación */
     running_save_tick_cnt = RUNNING_SAVE_TICKS;
 }
@@ -410,6 +422,21 @@ static void incubation_run_common(task_system_dta_t *p_task_system_dta)
         }
     }
 
+    /* --- Control del indicador de humedad baja (LED_H) con histéresis --- */
+    if (task_sht30_dta.data_valid)
+    {
+        if ((!humid_on) && (task_sht30_dta.Humidity < (cfg_hum - HUMID_HYSTERESIS)))
+        {
+            put_event_task_actuator(EV_HUMID_ON, ID_HUMID);
+            humid_on = true;
+        }
+        else if (humid_on && (task_sht30_dta.Humidity >= cfg_hum))
+        {
+            put_event_task_actuator(EV_HUMID_OFF, ID_HUMID);
+            humid_on = false;
+        }
+    }
+
     /* --- Control del servo --- */
     if (servo_active && cfg_days >= SERVO_MIN_CFG_DAYS)
     {
@@ -484,6 +511,11 @@ static void incubation_run_common(task_system_dta_t *p_task_system_dta)
             {
                 put_event_task_actuator(EV_HEATER_OFF, ID_HEATER);
                 heater_on = false;
+            }
+            if (humid_on)
+            {
+                put_event_task_actuator(EV_HUMID_OFF, ID_HUMID);
+                humid_on = false;
             }
             (void)task_memory_clear_running();
             p_task_system_dta->state = ST_SYS_FINISHED;
@@ -874,6 +906,7 @@ static void task_system_statechart(void)
                     display_alt_cnt         = 0;
                     running_save_tick_cnt   = RUNNING_SAVE_TICKS;
                     heater_on                = false; /* se re-evalúa solo en el próximo tick */
+                    humid_on                 = false; /* idem heater_on */
                     servo_active             = false;  /* rotación no se retoma tras un corte */
 
                     p_task_system_dta->state = ST_SYS_INCUBATING_CONT;

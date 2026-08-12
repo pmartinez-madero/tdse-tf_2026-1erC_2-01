@@ -68,7 +68,8 @@ extern TIM_HandleTypeDef htim2;
 const task_actuator_cfg_t task_actuator_cfg_list[] = {
 	{ID_LED_A,  LED_A_PORT,  LED_A_PIN, LED_A_ON,     LED_A_OFF,    DEL_LED_MAX, NULL,      0        },
 	{ID_SERVO,  NULL,        0,         0,            0,            0,           NULL,      0        },
-	{ID_HEATER, GPIOC,       RELE_Pin,  GPIO_PIN_SET, GPIO_PIN_RESET, 0,         GPIOC,     LED_T_Pin}
+	{ID_HEATER, GPIOC,       RELE_Pin,  GPIO_PIN_SET, GPIO_PIN_RESET, 0,         GPIOC,     LED_T_Pin},
+	{ID_HUMID,  LED_H_GPIO_Port, LED_H_Pin, GPIO_PIN_SET, GPIO_PIN_RESET, 0,     NULL,      0        }
 };
 
 task_actuator_dta_t task_actuator_dta_list[ACTUATOR_DTA_QTY];
@@ -148,6 +149,11 @@ void task_actuator_init(void *parameters)
 			HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port,  p_task_actuator_cfg->pin,  p_task_actuator_cfg->led_off);
 			HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port2, p_task_actuator_cfg->pin2, p_task_actuator_cfg->led_off);
 			p_task_actuator_dta->state = ST_HEATER_OFF;
+		}
+		else if (ID_HUMID == p_task_actuator_cfg->identifier)
+		{
+			HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port, p_task_actuator_cfg->pin, p_task_actuator_cfg->led_off);
+			p_task_actuator_dta->state = ST_HUMID_OFF;
 		}
 		else
 		{
@@ -315,6 +321,34 @@ void task_actuator_statechart(uint32_t index)
 				HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port,  p_task_actuator_cfg->pin,  p_task_actuator_cfg->led_off);
 				HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port2, p_task_actuator_cfg->pin2, p_task_actuator_cfg->led_off);
 				p_task_actuator_dta->state = ST_HEATER_OFF;
+			}
+
+			break;
+
+		/* ================================================================
+		 * HUMID — indicador de humedad baja apagado (LED_H)
+		 * ================================================================ */
+		case ST_HUMID_OFF:
+
+			if ((true == p_task_actuator_dta->flag) && (EV_HUMID_ON == p_task_actuator_dta->event))
+			{
+				p_task_actuator_dta->flag = false;
+				HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port, p_task_actuator_cfg->pin, p_task_actuator_cfg->led_on);
+				p_task_actuator_dta->state = ST_HUMID_ON;
+			}
+
+			break;
+
+		/* ================================================================
+		 * HUMID — indicador de humedad baja encendido (LED_H)
+		 * ================================================================ */
+		case ST_HUMID_ON:
+
+			if ((true == p_task_actuator_dta->flag) && (EV_HUMID_OFF == p_task_actuator_dta->event))
+			{
+				p_task_actuator_dta->flag = false;
+				HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port, p_task_actuator_cfg->pin, p_task_actuator_cfg->led_off);
+				p_task_actuator_dta->state = ST_HUMID_OFF;
 			}
 
 			break;

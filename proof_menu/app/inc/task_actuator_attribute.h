@@ -52,7 +52,9 @@ typedef enum task_actuator_ev {EV_LED_IDLE,
 							   EV_SERVO_POS_B,    /* Mover servo a 135° */
 							   EV_SERVO_CENTER,    /* Mover servo a 90°  */
 							   EV_HEATER_OFF,      /* Apagar calefactor (LED_T + RELE) */
-							   EV_HEATER_ON        /* Encender calefactor (LED_T + RELE) */
+							   EV_HEATER_ON,       /* Encender calefactor (LED_T + RELE) */
+							   EV_HUMID_OFF,       /* Apagar indicador de humedad baja (LED_H) */
+							   EV_HUMID_ON         /* Encender indicador de humedad baja (LED_H) */
 							   } task_actuator_ev_t;
 
 /* States of Task Actuator */
@@ -62,13 +64,16 @@ typedef enum task_actuator_st {ST_LED_IDLE,
 							   ST_SERVO_POS_B,    /* Servo en 135°, PWM apagado */
 							   ST_SERVO_MOVING,   /* Servo en movimiento, espera llegar */
 							   ST_HEATER_OFF,     /* Calefactor apagado */
-							   ST_HEATER_ON       /* Calefactor encendido */
+							   ST_HEATER_ON,      /* Calefactor encendido */
+							   ST_HUMID_OFF,      /* Indicador de humedad baja (LED_H) apagado */
+							   ST_HUMID_ON        /* Indicador de humedad baja (LED_H) encendido */
 							   } task_actuator_st_t;
 
 /* Identifier of Task Actuator */
 typedef enum task_actuator_id {ID_LED_A,
 							   ID_SERVO,
-							   ID_HEATER} task_actuator_id_t;
+							   ID_HEATER,
+							   ID_HUMID} task_actuator_id_t;
 
 typedef struct
 {
