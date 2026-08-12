@@ -44,7 +44,7 @@ La Tabla 0.1 resume el historial de revisiones y entregas de esta memoria.
 | :---: | --- | :---: |
 | 1.0 | Escritura inicial de la memoria | 02/08/2026 |
 | 1.1 | Primer entrega: sin video | 08/08/2026 |
-| 1.2 | Corrección de errores de formato y agregado del video. | 08/08/2026 |
+| 1.2 | Corrección de errores de formato y agregado del video. | 12/08/2026 |
 <p align="center">
   <b>Tabla 0.1</b>: Registro de versiones del documento.
 </p>
